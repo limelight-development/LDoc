@@ -291,6 +291,9 @@ local function parse_file(fname, lang, package, args)
 
             if item_follows or comment_contains_tags(comment,args) then
                tags = extract_tags(comment,args)
+               if tags.class and tags.class == "hook" and tags.name == "" then
+                  tags.name = nil
+               end
 
                -- explicitly named @module (which is recommended)
                if doc.project_level(tags.class) then
@@ -351,6 +354,7 @@ local function parse_file(fname, lang, package, args)
                F:warning('definition cannot be parsed - '..parse_error)
             end
          end
+
          -- some hackery necessary to find the module() call
          if not module_found and ldoc_comment then
             local old_style
@@ -374,6 +378,7 @@ local function parse_file(fname, lang, package, args)
          -- end of a block of document comments
          if ldoc_comment and tags then
             local line = lineno()
+
             if t ~= nil then
                if item_follows then -- parse the item definition
                   local err = item_follows(tags,tok)
@@ -387,6 +392,7 @@ local function parse_file(fname, lang, package, args)
             if is_local or tags['local'] then
                tags:add('local',true)
             end
+
             -- support for standalone fields/properties of classes/modules
             if (tags.field or tags.param) and not tags.class then
                -- the hack is to take a subfield and pull out its name,
@@ -398,6 +404,21 @@ local function parse_file(fname, lang, package, args)
                tags:add('name',fp)
                tags:add('class','field')
             end
+
+            if tags and tags.class and type(tags.class) == "table" and #tags.class == 2 then
+               local class = tags.class
+               if class[1] ~= class[2] and ((class[1] == "function" or class[2] == "function") and (class[1] == "hook" or class[2] == "hook")) then
+                  tags.class = "hook"
+
+                  for _, name in ipairs(tags.name) do
+                     if name ~= "" then
+                        tags.name = name
+                        break
+                     end
+                  end
+               end
+            end
+
             if tags.name then
                current_item = F:new_item(tags,line)
                current_item.inferred = item_follows ~= nil
