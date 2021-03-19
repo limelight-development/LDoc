@@ -182,7 +182,7 @@ function ldoc.source_ref (fun)
       end
       -- Module-level items:
       local name = item.display_name or item.name
-      if item.type == 'function' or item.type == 'lfunction' then
+      if item.type == 'function' or item.type == 'lfunction' or item.type == "hook" then
          if not ldoc.no_space_before_args then
             name = name..' '
          end
@@ -381,4 +381,3 @@ function ldoc.source_ref (fun)
 end
 
 return html
-
