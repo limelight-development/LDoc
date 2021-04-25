@@ -893,14 +893,6 @@ for cls in project.Classes() do
          --    item.description = string.format("Inhereted from @{%s}", baseclass)
          -- end
 
-         if item.retgroups then
-            print(item.name)
-            for id, val in pairs(item.retgroups) do
-               print(id, type(val), val)
-            end
-         end
-         print("--")
-
          if not item.inheretedFrom then
             item.inheretedFrom = baseclass
             table.insert(toadd, item)
@@ -916,25 +908,20 @@ for cls in project.Classes() do
          cls.kinds:add(item, cls.items, item.section)
       end
    end
-   -- if #toadd > 0 then
-   --    for id, val in pairs(cls) do
-   --       print(id, type(val), val)
-   --    end
-   --    print("-")
 
-   --    for id, val in pairs(cls.kinds) do
-   --       print(id, type(val), val)
-   --    end
-   --    print("-")
-
-   --    for _, item in ipairs(cls.items) do
-   --       for id, val in pairs(item) do
-   --          print(id, type(val), val)
-   --       end
-   --       break
-   --    end
-   --    print("---")
-   -- end
+   for _, item in ipairs(cls.items) do
+      if item.retgroups then
+         for _, returnGroup in ipairs(item.retgroups) do
+            for _, returnData in ipairs(returnGroup) do
+               print(returnData.type, returnData.mods.type)
+               if returnData.type == "self" and returnData.mods and returnData.mods.type == "self" then
+                  returnData.type = cls.name
+                  returnData.mods.type = cls.name
+               end
+            end
+         end
+      end
+   end
 end
 ldoc.modules = module_list
 ldoc.title = ldoc.title or args.title
