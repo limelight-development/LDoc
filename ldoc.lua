@@ -818,8 +818,124 @@ if builtin_style or builtin_template then
    end
 end
 
+local function copy(t, lookup_table)
+	if ( t == nil ) then return nil end
+
+	local out = {}
+	setmetatable( out, debug.getmetatable( t ) )
+	for i, v in pairs( t ) do
+		if ( type(v) ~= "table" ) then
+			out[ i ] = v
+		else
+			lookup_table = lookup_table or {}
+			lookup_table[ t ] = out
+			if ( lookup_table[ v ] ) then
+				out[ i ] = lookup_table[ v ] -- we already copied this table. reuse the copy.
+			else
+				out[ i ] = copy( v, lookup_table ) -- not yet copied. copy it.
+			end
+		end
+	end
+	return out
+end
+
+local pattern_escape_replacements = {
+	["("] = "%(",
+	[")"] = "%)",
+	["."] = "%.",
+	["%"] = "%%",
+	["+"] = "%+",
+	["-"] = "%-",
+	["*"] = "%*",
+	["?"] = "%?",
+	["["] = "%[",
+	["]"] = "%]",
+	["^"] = "%^",
+	["$"] = "%$",
+	["\0"] = "%z"
+}
+
+function string.PatternSafe( str )
+	return ( str:gsub( ".", pattern_escape_replacements ) )
+end
+
 ldoc.log = print
 ldoc.kinds = project
+
+for cls in project.Classes() do
+   local baseclass = type(cls.tags.baseclass) == "table" and cls.tags.baseclass[1] or false
+   if baseclass then
+      print("inhereted class:", cls.name, baseclass)
+   end
+
+   local toadd = {}
+   while baseclass do
+      local nextclass
+      for innerCls in project.Classes() do
+         if innerCls.name == baseclass then
+            nextclass = innerCls
+            break
+         end
+      end
+
+      if not nextclass then
+         break
+      end
+
+      for _, item in ipairs(nextclass.items) do
+         item = copy(item)
+         if item.name then
+            item.name = string.gsub(item.name, baseclass:PatternSafe(), cls.name)
+         end
+         -- if item.description then
+         --    item.description = string.format("%s\nInhereted from @{%s}", item.description, baseclass)
+         -- else
+         --    item.description = string.format("Inhereted from @{%s}", baseclass)
+         -- end
+
+         if item.retgroups then
+            print(item.name)
+            for id, val in pairs(item.retgroups) do
+               print(id, type(val), val)
+            end
+         end
+         print("--")
+
+         if not item.inheretedFrom then
+            item.inheretedFrom = baseclass
+            table.insert(toadd, item)
+         end
+      end
+      baseclass = type(nextclass.tags.baseclass) == "table" and nextclass.tags.baseclass[1] or false
+   end
+
+   for _, item in ipairs(toadd) do
+      if not cls.items.by_name[item.name] then
+         table.insert(cls.items, item)
+         cls.items.by_name[item.name] = item
+         cls.kinds:add(item, cls.items, item.section)
+      end
+   end
+   -- if #toadd > 0 then
+   --    for id, val in pairs(cls) do
+   --       print(id, type(val), val)
+   --    end
+   --    print("-")
+
+   --    for id, val in pairs(cls.kinds) do
+   --       print(id, type(val), val)
+   --    end
+   --    print("-")
+
+   --    for _, item in ipairs(cls.items) do
+   --       for id, val in pairs(item) do
+   --          print(id, type(val), val)
+   --       end
+   --       break
+   --    end
+   --    print("---")
+   -- end
+end
 ldoc.modules = module_list
 ldoc.title = ldoc.title or args.title
 ldoc.project = ldoc.project or args.project
