@@ -268,7 +268,39 @@ function M.this_module_name (basename,fname)
    --print('deduce',lpath,cnt,basename)
    if cnt ~= 1 then quit("module(...) name deduction failed: base "..basename.." "..fname) end
    lpath = lpath:gsub(path.sep,'.')
-   return (M.name_of(lpath):gsub('%.init$',''))
+
+   local name = (M.name_of(lpath):gsub('%.init$',''))
+   local foundtype = nil
+
+   local plugin = name:match("^plugins.([%w]+).")
+   local basepath = plugin and ("^plugins." .. plugin .. ".") or "^"
+
+   if name:find(basepath .. "entities.weapons.gmod_tool.stools.") then
+      foundtype = "stool"
+      name = name:gsub(basepath .. "entities.weapons.gmod_tool.stools.", "")
+      -- name = "stool." .. name
+   elseif name:find(basepath .. "entities.weapons.") then
+      foundtype = "swep"
+      name = name:gsub(basepath .. "entities.weapons.", "")
+      name = name:gsub(".shared$", "")
+      name = name:gsub(".init$", "")
+      name = name:gsub(".cl_init$", "")
+      -- name = "swep." .. name
+   elseif name:find(basepath .. "entities.") then
+      foundtype = "sent"
+      name = name:gsub(basepath .. "entities.", "")
+      -- name = "sent." .. name
+   end
+
+   if name:find(".items.") then
+      foundtype = "item"
+      local _, ed = name:find(".items.")
+      name = name:sub(ed + 1)
+      name = name:gsub("^sh_", "")
+      -- name = "item." .. name
+   end
+
+   return name, foundtype
 end
 
 function M.find_existing_module (name, dname, searchfn)
