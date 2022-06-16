@@ -29,7 +29,7 @@ local known_tags = {
    fixme = 'S', todo = 'S', warning = 'S', raise = 'S', charset = 'S', within = 'S',
    ['local'] = 'N', export = 'N', private = 'N', constructor = 'N', static = 'N',include = 'S',
    -- project-level
-   module = 'T', script = 'T', example = 'T', topic = 'T', submodule = 'T', classmod = 'T', file = 'T', weapon = 'T', entity = 'T', tool = 'T',  vehicle = 'T',
+   module = 'T', script = 'T', example = 'T', topic = 'T', submodule='T', classmod='T', file='T',
    -- module-level
    ['function'] = 'T', lfunction = 'T', table = 'T', section = 'T', type = 'T',
    annotation = 'T', factory = 'T';
