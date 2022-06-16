@@ -293,7 +293,7 @@ local function parse_file(fname, lang, package, args)
 
             if item_follows or comment_contains_tags(comment,args) then
                tags = extract_tags(comment,args)
-               if tags.class and tags.class == "hook" and tags.name == "" then
+               if tags.class and tags.name == "" then
                   tags.name = nil
                end
 
