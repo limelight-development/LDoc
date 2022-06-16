@@ -363,11 +363,16 @@ local function parse_file(fname, lang, package, args)
             module_found,t,v = lang:find_module(tok,t,v)
             -- right, we can add the module object ...
             old_style = module_found ~= nil
+            local module_type
             if not module_found or module_found == '...' then
                -- we have to guess the module name
-               module_found = tools.this_module_name(package,fname)
+               module_found, module_type = tools.this_module_name(package,fname)
             end
             if not tags then tags = extract_tags(comment,args) end
+
+            if module_type and not tags:get("class") then
+               tags:add('class', module_type)
+            end
             add_module(tags,module_found,old_style)
             tags = nil
             if not t then
