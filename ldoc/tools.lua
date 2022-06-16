@@ -299,6 +299,12 @@ function M.this_module_name (basename,fname)
       name = name:gsub("^sh_", "")
       -- name = "item." .. name
    end
+   if name:find(".derma.") then
+      foundtype = "panel"
+      local _, ed = name:find(".derma.")
+      name = name:sub(ed + 1)
+      name = name:gsub("^cl_", "")
+   end
 
    return name, foundtype
 end
