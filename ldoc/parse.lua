@@ -199,7 +199,9 @@ local function parse_file(fname, lang, package, args)
 
    local function add_module(tags,module_found,old_style)
       tags:add('name',module_found)
-      tags:add('class','module')
+      if not tags:get('class') then
+         tags:add('class','module')
+      end
       local item = F:new_item(tags,lineno())
       item.old_style = old_style
       module_item = item
