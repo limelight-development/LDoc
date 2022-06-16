@@ -296,6 +296,12 @@ function M.this_module_name (basename,fname)
       foundtype = "item"
       local _, ed = name:find(".items.")
       name = name:sub(ed + 1)
+
+      local st = name:find(".sh_%w+$")
+      if st then
+         name = name:sub(st + 1)
+      end
+
       name = name:gsub("^sh_", "")
       -- name = "item." .. name
    end
