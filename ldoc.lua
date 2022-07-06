@@ -867,62 +867,64 @@ end
 ldoc.log = print
 ldoc.kinds = project
 
-if project.Classes then
-   for cls in project.Classes() do
-      local baseclass = type(cls.tags.baseclass) == "table" and cls.tags.baseclass[1] or false
-      if baseclass then
-         print("inhereted class:", cls.name, baseclass)
-      end
+local inheritable = {"Modules", "Classes", "Panels", "Items", "Entities", "Weapons", "Tools"}
+for _, key in ipairs(inheritable) do
+   if project[key] then
+      for cls in project[key]() do
+         local baseclass = type(cls.tags.baseclass) == "table" and cls.tags.baseclass[1] or false
+         if baseclass then
+            print("inhereted class:", cls.name, baseclass)
+         end
 
-      local toadd = {}
-      while baseclass do
-         local nextclass
-         for innerCls in project.Classes() do
-            if innerCls.name == baseclass then
-               nextclass = innerCls
+         local toadd = {}
+         while baseclass do
+            local nextclass
+            for innerCls in project[key]() do
+               if innerCls.name == baseclass then
+                  nextclass = innerCls
+                  break
+               end
+            end
+
+            if not nextclass then
                break
             end
-         end
 
-         if not nextclass then
-            break
-         end
+            for _, item in ipairs(nextclass.items) do
+               item = copy(item)
+               if item.name then
+                  item.name = string.gsub(item.name, baseclass:PatternSafe(), cls.name)
+               end
+               -- if item.description then
+               --    item.description = string.format("%s\nInhereted from @{%s}", item.description, baseclass)
+               -- else
+               --    item.description = string.format("Inhereted from @{%s}", baseclass)
+               -- end
 
-         for _, item in ipairs(nextclass.items) do
-            item = copy(item)
-            if item.name then
-               item.name = string.gsub(item.name, baseclass:PatternSafe(), cls.name)
+               if not item.inheretedFrom then
+                  item.inheretedFrom = baseclass
+                  table.insert(toadd, item)
+               end
             end
-            -- if item.description then
-            --    item.description = string.format("%s\nInhereted from @{%s}", item.description, baseclass)
-            -- else
-            --    item.description = string.format("Inhereted from @{%s}", baseclass)
-            -- end
+            baseclass = type(nextclass.tags.baseclass) == "table" and nextclass.tags.baseclass[1] or false
+         end
 
-            if not item.inheretedFrom then
-               item.inheretedFrom = baseclass
-               table.insert(toadd, item)
+         for _, item in ipairs(toadd) do
+            if not cls.items.by_name[item.name] then
+               table.insert(cls.items, item)
+               cls.items.by_name[item.name] = item
+               cls.kinds:add(item, cls.items, item.section)
             end
          end
-         baseclass = type(nextclass.tags.baseclass) == "table" and nextclass.tags.baseclass[1] or false
-      end
 
-      for _, item in ipairs(toadd) do
-         if not cls.items.by_name[item.name] then
-            table.insert(cls.items, item)
-            cls.items.by_name[item.name] = item
-            cls.kinds:add(item, cls.items, item.section)
-         end
-      end
-
-      for _, item in ipairs(cls.items) do
-         if item.retgroups then
-            for _, returnGroup in ipairs(item.retgroups) do
-               for _, returnData in ipairs(returnGroup) do
-                  print(returnData.type, returnData.mods.type)
-                  if returnData.type == "self" and returnData.mods and returnData.mods.type == "self" then
-                     returnData.type = cls.name
-                     returnData.mods.type = cls.name
+         for _, item in ipairs(cls.items) do
+            if item.retgroups then
+               for _, returnGroup in ipairs(item.retgroups) do
+                  for _, returnData in ipairs(returnGroup) do
+                     if returnData.type == "self" and returnData.mods and returnData.mods.type == "self" then
+                        returnData.type = cls.name
+                        returnData.mods.type = cls.name
+                     end
                   end
                end
             end
