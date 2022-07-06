@@ -200,6 +200,7 @@ end
 ldoc.alias('tparam',{'param',modifiers={type="$1"}})
 ldoc.alias('treturn',{'return',modifiers={type="$1"}})
 ldoc.alias('tfield',{'field',modifiers={type="$1"}})
+ldoc.alias('chainable',{'return',modifiers={type='self'}})
 
 function ldoc.tparam_alias (name,type)
    type = type or name
